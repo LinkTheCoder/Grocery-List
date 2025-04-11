@@ -1,7 +1,7 @@
 require('dotenv').config();
-
 const express = require("express");
 const { Pool } = require("pg");
+const path = require("path"); // Import path to resolve file paths
 
 const app = express();
 const port = 3000;
@@ -17,34 +17,19 @@ const pool = new Pool({
 
 app.use(express.json());
 
+// Serve static files from the "public" folder
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Root route — just to test if it's running
 app.get("/", (req, res) => {
   res.send("Grocery List API is running 🚀");
 });
 
-// Get all grocery items
+// Get all grocery items from the database
 app.get("/grocery", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM grocery ORDER BY created_at DESC");
     res.json(result.rows);  // Sends all grocery items as JSON
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server error");
-  }
-});
-
-// Create a new grocery item
-app.post("/grocery", async (req, res) => {
-  const { item_name, quantity } = req.body;
-
-  if (!item_name || !quantity) return res.status(400).send("Item name and quantity are required");
-
-  try {
-    const result = await pool.query(
-      "INSERT INTO grocery (item_name, quantity) VALUES ($1, $2) RETURNING *",
-      [item_name, quantity]
-    );
-    res.status(201).json(result.rows[0]);  // Send the newly created item as response
   } catch (err) {
     console.error(err);
     res.status(500).send("Server error");

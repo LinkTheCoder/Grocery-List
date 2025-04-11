@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grocery List</title>
+  <style>
+    /* Simple styling for the list */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      padding: 10px;
+      background-color: #f0f0f0;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Grocery List</h1>
+  <ul id="grocery-list">
+    <!-- Grocery items will be inserted here -->
+  </ul>
+
+  <script>
+    // Fetch the grocery list from the backend
+    async function fetchGroceryList() {
+      try {
+        const response = await fetch('http://localhost:3000/grocery');
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        const groceries = await response.json();
+
+        // Get the list container and clear any existing items
+        const listContainer = document.getElementById('grocery-list');
+        listContainer.innerHTML = '';  // Clear the list
+
+        // Loop through the grocery items and add them to the list
+        groceries.forEach(item => {
+          const listItem = document.createElement('li');
+          listItem.textContent = `${item.item_name} (Quantity: ${item.quantity})`;
+          listContainer.appendChild(listItem);
+        });
+      } catch (err) {
+        console.error('Error fetching grocery list:', err);
+      }
+    }
+
+    // Fetch and display the grocery list when the page loads
+    window.onload = fetchGroceryList;
+  </script>
+</body>
+</html>
