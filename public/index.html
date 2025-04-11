@@ -4,26 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grocery List</title>
-  <style>
-    /* Simple styling for the list */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    li {
-      padding: 10px;
-      background-color: #f0f0f0;
-      margin-bottom: 10px;
-      border-radius: 5px;
-    }
-  </style>
+  <!-- Link to the external CSS file -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <h1>Grocery List</h1>
+  
+  <!-- Form to add a new grocery item -->
+  <h2>Add New Grocery Item</h2>
+  <form id="add-grocery-form">
+    <input type="text" id="name" placeholder="Item Name" required />
+    <input type="number" id="quantity" placeholder="Quantity" required />
+    <button type="submit">Add Item</button>
+  </form>
+
+  <!-- Grocery list -->
+  <h2>Grocery Items</h2>
   <ul id="grocery-list">
     <!-- Grocery items will be inserted here -->
   </ul>
@@ -46,10 +42,86 @@
         groceries.forEach(item => {
           const listItem = document.createElement('li');
           listItem.textContent = `${item.item_name} (Quantity: ${item.quantity})`;
+
+          // Add a button to delete the item
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = 'Delete';
+          deleteButton.onclick = () => deleteGroceryItem(item.id);
+
+          // Add a button to update the item
+          const updateButton = document.createElement('button');
+          updateButton.textContent = 'Update';
+          updateButton.onclick = () => updateGroceryItem(item.id, item.item_name, item.quantity);
+
+          listItem.appendChild(deleteButton);
+          listItem.appendChild(updateButton);
           listContainer.appendChild(listItem);
         });
       } catch (err) {
         console.error('Error fetching grocery list:', err);
+      }
+    }
+
+    // Add a new grocery item
+    document.getElementById('add-grocery-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const name = document.getElementById('name').value;
+      const quantity = document.getElementById('quantity').value;
+
+      try {
+        const response = await fetch('http://localhost:3000/grocery', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ item_name: name, quantity }),
+        });
+
+        if (response.ok) {
+          fetchGroceryList();  // Refresh the list after adding an item
+          document.getElementById('add-grocery-form').reset();  // Clear form
+        } else {
+          throw new Error('Failed to add item');
+        }
+      } catch (err) {
+        console.error('Error adding grocery item:', err);
+      }
+    });
+
+    // Delete a grocery item
+    async function deleteGroceryItem(id) {
+      try {
+        const response = await fetch(`http://localhost:3000/grocery/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+          fetchGroceryList();  // Refresh the list after deleting an item
+        } else {
+          throw new Error('Failed to delete item');
+        }
+      } catch (err) {
+        console.error('Error deleting grocery item:', err);
+      }
+    }
+
+    // Update a grocery item
+    async function updateGroceryItem(id, currentName, currentQuantity) {
+      const newName = prompt('Enter new name:', currentName);
+      const newQuantity = prompt('Enter new quantity:', currentQuantity);
+
+      if (newName && newQuantity) {
+        try {
+          const response = await fetch(`http://localhost:3000/grocery/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_name: newName, quantity: newQuantity }),
+          });
+
+          if (response.ok) {
+            fetchGroceryList();  // Refresh the list after updating an item
+          } else {
+            throw new Error('Failed to update item');
+          }
+        } catch (err) {
+          console.error('Error updating grocery item:', err);
+        }
       }
     }
 
