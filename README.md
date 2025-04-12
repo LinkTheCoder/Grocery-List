@@ -1,2 +1,2 @@
 # Grocery List
-<img src="https://i.imgur.com/FMhALjz.png" width="50%" />
+<img src="https://i.imgur.com/SgesLiz.png" width="50%" />
