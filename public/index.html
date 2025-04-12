@@ -9,6 +9,15 @@
 <body>
   <h1>Grocery List</h1>
   
+  <!-- Login form -->
+  <h2>Login</h2>
+  <form id="login-form">
+    <input type="text" id="username" placeholder="Username" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button type="submit">Login</button>
+  </form>
+  <p>Don't have an account? <a href="register.html">Register here</a></p>
+
   <!-- Form to add a new grocery item -->
   <h2>Add New Grocery Item</h2>
   <form id="add-grocery-form">
@@ -23,11 +32,48 @@
     <!-- Grocery items will be inserted here -->
   </ul>
 
+  <!-- Logout button -->
+  <button id="logout-button" style="display: none;">Logout</button>
+
   <script>
+    let authToken = '';
+
+    document.getElementById('login-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch('http://localhost:3000/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          authToken = data.token;
+          alert('Login successful');
+          fetchGroceryList();
+          document.getElementById('logout-button').style.display = 'block'; // Show the logout button
+          document.getElementById('login-form').reset(); // Clear the login form inputs
+        } else if (response.status === 401) {
+          alert('Wrong password. Please try again.');
+        } else {
+          throw new Error('Login failed');
+        }
+      } catch (err) {
+        console.error('Error logging in:', err);
+      }
+    });
+
     // Fetch the grocery list from the backend
     async function fetchGroceryList() {
       try {
-        const response = await fetch('http://localhost:3000/grocery');
+        const response = await fetch('http://localhost:3000/grocery', {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
@@ -71,7 +117,10 @@
       try {
         const response = await fetch('http://localhost:3000/grocery', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+          },
           body: JSON.stringify({ item_name: name, quantity }),
         });
 
@@ -89,7 +138,10 @@
     // Delete a grocery item
     async function deleteGroceryItem(id) {
       try {
-        const response = await fetch(`http://localhost:3000/grocery/${id}`, { method: 'DELETE' });
+        const response = await fetch(`http://localhost:3000/grocery/${id}`, { 
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
         if (response.ok) {
           fetchGroceryList();  // Refresh the list after deleting an item
         } else {
@@ -109,7 +161,10 @@
         try {
           const response = await fetch(`http://localhost:3000/grocery/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${authToken}`,
+            },
             body: JSON.stringify({ item_name: newName, quantity: newQuantity }),
           });
 
@@ -124,8 +179,19 @@
       }
     }
 
-    // Fetch and display the grocery list when the page loads
-    window.onload = fetchGroceryList;
+    // Handle user logout
+    document.getElementById('logout-button').addEventListener('click', () => {
+      authToken = ''; // Clear the token
+      alert('You have been logged out.');
+      document.getElementById('grocery-list').innerHTML = ''; // Clear the grocery list
+      document.getElementById('logout-button').style.display = 'none'; // Hide the logout button
+    });
+
+    // Hide the logout button on page load
+    window.onload = () => {
+      document.getElementById('logout-button').style.display = 'none';
+      fetchGroceryList();
+    };
   </script>
 </body>
 </html>
