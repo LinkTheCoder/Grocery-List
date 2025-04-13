@@ -34,7 +34,7 @@
         if (response.ok) {
           alert('Registration successful! You can now log in.');
           document.getElementById('register-form').reset(); // Clear the form
-          window.location.href = 'index.html'; // Redirect to login page
+          window.location.href = '/user/login'; // Redirect to login page
         } else {
           const error = await response.text();
           alert(`Registration failed: ${error}`);

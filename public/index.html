@@ -45,7 +45,7 @@
       const password = document.getElementById('password').value;
 
       try {
-        const response = await fetch('http://localhost:3000/login', {
+        const response = await fetch('http://localhost:3000/user/login', { // Updated URL
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
@@ -55,7 +55,7 @@
           const data = await response.json();
           authToken = data.token;
           alert('Login successful');
-          fetchGroceryList();
+          fetchGroceryList(); // Fetch the grocery list after successful login
           document.getElementById('logout-button').style.display = 'block'; // Show the logout button
           document.getElementById('login-form').reset(); // Clear the login form inputs
         } else if (response.status === 401) {
@@ -70,10 +70,22 @@
 
     // Fetch the grocery list from the backend
     async function fetchGroceryList() {
+      if (!authToken) {
+        console.warn('No auth token found. Skipping fetchGroceryList.');
+        return; // Do not proceed if the user is not logged in
+      }
+
       try {
         const response = await fetch('http://localhost:3000/grocery', {
           headers: { Authorization: `Bearer ${authToken}` },
         });
+        if (response.status === 401) {
+          alert('Session expired. Please log in again.');
+          authToken = ''; // Clear the token
+          document.getElementById('grocery-list').innerHTML = ''; // Clear the grocery list
+          document.getElementById('logout-button').style.display = 'none'; // Hide the logout button
+          return;
+        }
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
@@ -190,7 +202,7 @@
     // Hide the logout button on page load
     window.onload = () => {
       document.getElementById('logout-button').style.display = 'none';
-      fetchGroceryList();
+      // Do not call fetchGroceryList on page load
     };
   </script>
 </body>
